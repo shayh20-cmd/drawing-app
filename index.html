@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SketchDraw – ציור וקטורי</title>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nunito:wght@400;600;700&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -14,7 +14,7 @@
   --bg:#fafafa;--sidebar-bg:#fff;--toolbar-bg:#fff;
   --text:#1e1e2e;--muted:#888;
 }
-body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height:100vh;display:flex;flex-direction:column;user-select:none}
+body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:hidden;height:100vh;display:flex;flex-direction:column;user-select:none}
 
 /* ── MENU BAR ── */
 .menu-bar{
@@ -25,7 +25,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
 .logo{font-family:'Caveat',cursive;font-size:22px;font-weight:700;color:var(--purple);margin-right:8px;letter-spacing:-0.5px}
 .menu-btn{
   padding:4px 12px;border:1px solid var(--border);border-radius:7px;
-  background:#fff;cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;
+  background:#fff;cursor:pointer;font-size:12px;font-family:'Nunito','Assistant',sans-serif;
   color:#333;transition:all .15s;white-space:nowrap;font-weight:600;
 }
 .menu-btn:hover{background:#f5f5f5;border-color:#bbb}
@@ -70,7 +70,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
 /* ── HINTS ── */
 .hint{
   position:absolute;bottom:14px;left:70px;font-size:11px;color:#bbb;
-  font-family:'Nunito',sans-serif;pointer-events:none;
+  font-family:'Nunito','Assistant',sans-serif;pointer-events:none;
 }
 
 /* ── PROPERTIES SIDEBAR ── */
@@ -120,24 +120,26 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
 /* button groups */
 .bg{display:flex;gap:3px}
 .sg{
-  flex:1;padding:5px 4px;border:1px solid var(--border);border-radius:6px;
+  flex:1;padding:6px 4px;border:1px solid var(--border);border-radius:6px;
   background:#fff;cursor:pointer;font-size:11px;text-align:center;
-  transition:all .12s;color:#444;font-family:'Nunito',sans-serif;font-weight:600;
+  transition:all .12s;color:#444;font-family:'Nunito','Assistant',sans-serif;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
 }
 .sg:hover{background:#f5f5f5}
 .sg.active{background:var(--purple-light);border-color:var(--purple);color:var(--purple)}
+.sg svg{width:16px;height:16px;pointer-events:none;display:block}
 
 /* selects / inputs */
 .sel-inp{
   flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;
-  font-size:12px;font-family:'Nunito',sans-serif;color:#333;background:#fff;cursor:pointer;
+  font-size:12px;font-family:'Nunito','Assistant',sans-serif;color:#333;background:#fff;cursor:pointer;
 }
-.num-inp{width:62px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:'Nunito',sans-serif}
+.num-inp{width:62px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:'Nunito','Assistant',sans-serif}
 
 /* ── TEXT EDITOR OVERLAY ── */
 #te{
   position:fixed;display:none;border:none;outline:none;background:transparent;
-  font-family:'Caveat',cursive;font-size:20px;color:var(--text);
+  font-family:'Caveat','Assistant',cursive;font-size:20px;color:var(--text);
   resize:none;overflow:hidden;min-width:60px;min-height:28px;
   z-index:500;padding:2px 4px;line-height:1.3;caret-color:var(--purple);
 }
@@ -160,6 +162,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
   <button class="menu-btn" onclick="redo()">↪ חזור</button>
   <div class="menu-sep"></div>
   <button class="menu-btn" onclick="fitAll()">⊡ התאם</button>
+  <div class="menu-sep"></div>
+  <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;font-weight:600;white-space:nowrap" title="יישור אובייקטים ומרווחים שווים אוטומטית בעת גרירה">
+    <input type="checkbox" id="chk-smartguides" checked onchange="toggleSmartGuides(this.checked)" style="cursor:pointer">
+    🧲 קווי יישור חכמים
+  </label>
   <div class="menu-spacer"></div>
   <span class="zoom-badge" id="zoom-lbl" onclick="resetZoom()" title="לחץ לאיפוס זום">100%</span>
   <div class="menu-sep"></div>
@@ -272,10 +279,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
     <div class="sb-sec" id="sec-fill">
       <div class="sb-lbl">מילוי</div>
       <div class="bg" id="fill-style-btns">
-        <button class="sg active" data-fs="none"        onclick="setFillStyle('none')">ללא</button>
-        <button class="sg"        data-fs="solid"       onclick="setFillStyle('solid')">מלא</button>
-        <button class="sg"        data-fs="hachure"     onclick="setFillStyle('hachure')">פסים</button>
-        <button class="sg"        data-fs="cross-hatch" onclick="setFillStyle('cross-hatch')">רשת</button>
+        <button class="sg active" data-fs="none"        title="ללא" onclick="setFillStyle('none')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+        <button class="sg"        data-fs="solid"       title="מלא" onclick="setFillStyle('solid')">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+        <button class="sg"        data-fs="hachure"     title="פסים" onclick="setFillStyle('hachure')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="12" x2="12" y2="4"/><line x1="4" y1="20" x2="20" y2="4"/><line x1="12" y1="20" x2="20" y2="12"/></svg>
+        </button>
+        <button class="sg"        data-fs="cross-hatch" title="רשת" onclick="setFillStyle('cross-hatch')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        </button>
       </div>
       <div class="pal" id="pal-fill" style="margin-top:7px"></div>
       <div class="sb-row" style="margin-top:7px">
@@ -300,9 +315,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
     <div class="sb-sec" id="sec-rough">
       <div class="sb-lbl">סגנון</div>
       <div class="bg" id="rough-btns">
-        <button class="sg"        data-r="0"   onclick="setRoughness(0)">חלק</button>
-        <button class="sg active" data-r="1"   onclick="setRoughness(1)">רגיל</button>
-        <button class="sg"        data-r="2.5" onclick="setRoughness(2.5)">גס</button>
+        <button class="sg"        data-r="0"   title="חלק" onclick="setRoughness(0)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>
+        </button>
+        <button class="sg active" data-r="1"   title="רגיל" onclick="setRoughness(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 Q8 7 12 12 T20 12"/></svg>
+        </button>
+        <button class="sg"        data-r="2.5" title="גס" onclick="setRoughness(2.5)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15 L8 8 L11 16 L14 7 L17 15 L20 9"/></svg>
+        </button>
       </div>
     </div>
 
@@ -310,9 +331,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
     <div class="sb-sec" id="sec-dash">
       <div class="sb-lbl">סגנון קו</div>
       <div class="bg" id="dash-btns">
-        <button class="sg active" data-d="solid"  onclick="setDash('solid')">רציף</button>
-        <button class="sg"        data-d="dashed" onclick="setDash('dashed')">מקווקו</button>
-        <button class="sg"        data-d="dotted" onclick="setDash('dotted')">נקודות</button>
+        <button class="sg active" data-d="solid"  title="רציף" onclick="setDash('solid')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>
+        </button>
+        <button class="sg"        data-d="dashed" title="מקווקו" onclick="setDash('dashed')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="4.5 3.5"/></svg>
+        </button>
+        <button class="sg"        data-d="dotted" title="נקודות" onclick="setDash('dotted')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="0.5 4"/></svg>
+        </button>
       </div>
     </div>
 
@@ -320,10 +347,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
     <div class="sb-sec" id="sec-arrow">
       <div class="sb-lbl">חצים</div>
       <div class="bg" id="arrow-btns">
-        <button class="sg"        data-arrow="none"  onclick="setArrow('none')">ללא</button>
-        <button class="sg active" data-arrow="end"   onclick="setArrow('end')">→</button>
-        <button class="sg"        data-arrow="start" onclick="setArrow('start')">←</button>
-        <button class="sg"        data-arrow="both"  onclick="setArrow('both')">↔</button>
+        <button class="sg"        data-arrow="none"  title="ללא" onclick="setArrow('none')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>
+        </button>
+        <button class="sg active" data-arrow="end"   title="→" onclick="setArrow('end')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="18" y2="12"/><polyline points="13,7 18,12 13,17"/></svg>
+        </button>
+        <button class="sg"        data-arrow="start" title="←" onclick="setArrow('start')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="20" y2="12"/><polyline points="11,7 6,12 11,17"/></svg>
+        </button>
+        <button class="sg"        data-arrow="both"  title="↔" onclick="setArrow('both')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="12" x2="17" y2="12"/><polyline points="11,7 6,12 11,17"/><polyline points="13,7 18,12 13,17"/></svg>
+        </button>
       </div>
     </div>
 
@@ -343,6 +378,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
       <div class="sb-row">
         <select class="sel-inp" id="sel-font" onchange="applyProp('fontFamily',this.value);defaultStyle.fontFamily=this.value">
           <option value="Caveat">Caveat (כתב יד)</option>
+          <option value="Assistant">Assistant (עברית)</option>
           <option value="Arial">Arial</option>
           <option value="Georgia">Georgia</option>
           <option value="Courier New">Courier New</option>
@@ -359,9 +395,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
         </div>
       </div>
       <div class="bg" id="align-btns">
-        <button class="sg active" data-align="left"   onclick="setAlign('left')">שמאל</button>
-        <button class="sg"        data-align="center" onclick="setAlign('center')">מרכז</button>
-        <button class="sg"        data-align="right"  onclick="setAlign('right')">ימין</button>
+        <button class="sg active" data-align="left"   title="שמאל" onclick="setAlign('left')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+        </button>
+        <button class="sg"        data-align="center" title="מרכז" onclick="setAlign('center')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/></svg>
+        </button>
+        <button class="sg"        data-align="right"  title="ימין" onclick="setAlign('right')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="6" y1="18" x2="20" y2="18"/></svg>
+        </button>
       </div>
     </div>
 
@@ -369,12 +411,20 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
     <div class="sb-sec">
       <div class="sb-lbl">פעולות</div>
       <div class="sb-row">
-        <button class="menu-btn" style="flex:1" onclick="duplicateSelected()">שכפל</button>
-        <button class="menu-btn danger" style="flex:1" onclick="deleteSelected()">מחק</button>
+        <button class="menu-btn" style="flex:1;display:flex;align-items:center;justify-content:center" title="שכפל" onclick="duplicateSelected()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+        </button>
+        <button class="menu-btn danger" style="flex:1;display:flex;align-items:center;justify-content:center" title="מחק" onclick="deleteSelected()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
       </div>
       <div class="sb-row">
-        <button class="menu-btn" style="flex:1" onclick="bringFront()">קדימה</button>
-        <button class="menu-btn" style="flex:1" onclick="sendBack()">אחורה</button>
+        <button class="menu-btn" style="flex:1;display:flex;align-items:center;justify-content:center" title="קדימה" onclick="bringFront()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="12" height="12" rx="2" opacity="0.4"/><rect x="9" y="9" width="12" height="12" rx="2"/></svg>
+        </button>
+        <button class="menu-btn" style="flex:1;display:flex;align-items:center;justify-content:center" title="אחורה" onclick="sendBack()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="12" height="12" rx="2"/><rect x="9" y="9" width="12" height="12" rx="2" opacity="0.4"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -390,19 +440,17 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);overflow:hidden;height
 //  PALETTE — muted earthy tones
 // ═══════════════════════════════════════════════
 const STROKE_COLORS = [
-  '#1c2b3a','#1a3a5c','#155068','#126260',
-  '#2a3e30','#4e4428','#6a5038','#7a5e48',
-  '#b86868','#c07878','#c2bbd5',
-  '#6082b0','#4888a0','#3e9888',
-  '#688068','#8eaa88','#555555','#1a1a1a'
+  '#d1d5db','#fca5a5','#fdba74','#fcd34d','#fde047',
+  '#bef264','#86efac','#6ee7b7','#5eead4','#67e8f9',
+  '#7dd3fc','#93c5fd','#a5b4fc','#c4b5fd','#d8b4fe',
+  '#f0abfc','#f9a8d4','#fda4af','#9ca3af','#4b5563'
 ];
 const FILL_COLORS = [
   'transparent',
-  '#f4eee6','#eee4da','#e2d5c5','#d8c8b2',
-  '#f0d5cc','#e8b4ac',
-  '#d5e5f0','#d0ece5','#d8eed0','#e0dce8',
-  '#c2bbd5','#8dccc0','#8eaa88',
-  '#f5f0ea'
+  '#d1d5db','#fca5a5','#fdba74','#fcd34d','#fde047',
+  '#bef264','#86efac','#6ee7b7','#5eead4','#67e8f9',
+  '#7dd3fc','#93c5fd','#a5b4fc','#c4b5fd','#d8b4fe',
+  '#f0abfc','#f9a8d4','#fda4af','#9ca3af','#4b5563'
 ];
 
 // ═══════════════════════════════════════════════
@@ -427,6 +475,40 @@ let dragSnap = null;
 let curEl    = null;
 let fhPts    = [];
 let editId   = null;
+
+// Rotation
+const ROTATABLE_TYPES = ['rectangle','ellipse','diamond','text'];
+const ROT_HANDLE_DIST = 26; // screen px above the top-center handle
+const ROT_SNAP_DEG    = 5;  // magnetic snap window around each 45° step
+function rotatePoint(px,py,cx,cy,rot) {
+  if(!rot) return { x:px, y:py };
+  const dx=px-cx, dy=py-cy, cos=Math.cos(rot), sin=Math.sin(rot);
+  return { x: cx+dx*cos-dy*sin, y: cy+dx*sin+dy*cos };
+}
+// World point -> the element's own unrotated (local) coordinate space
+function toLocal(el, wx, wy) {
+  if(!el.rot) return { x:wx, y:wy };
+  const b=bbox(el);
+  return rotatePoint(wx, wy, b.x+b.w/2, b.y+b.h/2, -el.rot);
+}
+
+// Connection-point snapping
+const CONNECTABLE_TYPES = ['rectangle','ellipse','diamond','text'];
+const SNAP_PX  = 14;  // distance (screen px) at which a point-target snaps
+const HOVER_PX = 60;  // distance (screen px) at which nearby points light up
+let snapPoint      = null; // {x,y,elId,anchor} currently snapped-to point
+let snapCandidates = [];   // nearby points shown as hints
+
+// Smart alignment / equal-spacing guides
+const ALIGN_PX = 6; // snap threshold (screen px)
+let smartGuides = true;
+try { smartGuides = localStorage.getItem('sketchdraw_smartguides') !== '0'; } catch(err) {}
+let guideLines = []; // active alignment/spacing guide lines for rendering
+function toggleSmartGuides(v) {
+  smartGuides = v;
+  try { localStorage.setItem('sketchdraw_smartguides', v?'1':'0'); } catch(err) {}
+  if(!v) { guideLines=[]; render(); }
+}
 
 let defaultStyle = {
   strokeColor:'#1c2b3a', fillColor:'transparent',
@@ -480,10 +562,10 @@ function mkEl(type, x1,y1, x2,y2) {
   } else if (type==='freehand') {
     el.points = [[x1,y1]];
   } else if (type==='text') {
-    el.x=x1; el.y=y1; el.w=200; el.h=40; el.text='';
+    el.x=x1; el.y=y1; el.w=200; el.h=40; el.text=''; el.rot=0;
   } else {
     el.x=Math.min(x1,x2); el.y=Math.min(y1,y2);
-    el.w=Math.abs(x2-x1); el.h=Math.abs(y2-y1);
+    el.w=Math.abs(x2-x1); el.h=Math.abs(y2-y1); el.rot=0;
   }
   return el;
 }
@@ -537,6 +619,36 @@ function defaultCtrl(x1,y1,x2,y2) {
   return { cx: mx - dy/len*perp, cy: my + dx/len*perp };
 }
 
+// Draws a freehand stroke as a native canvas curve through midpoints —
+// each source point acts as a quadratic control point, so the curve
+// itself passes through the midpoints between consecutive points,
+// giving one continuous, corner-free line with no rough.js resampling.
+function drawSmoothFreehand(el, tCtx) {
+  const pts=el.points, s=el.style;
+  tCtx.save();
+  tCtx.strokeStyle=s.strokeColor;
+  tCtx.lineWidth=s.strokeWidth;
+  tCtx.lineJoin='round'; tCtx.lineCap='round';
+  if(s.dashStyle==='dashed') tCtx.setLineDash([10,6]);
+  else if(s.dashStyle==='dotted') tCtx.setLineDash([2,8]);
+  else tCtx.setLineDash([]);
+
+  tCtx.beginPath();
+  tCtx.moveTo(pts[0][0],pts[0][1]);
+  if(pts.length<3) {
+    for(let i=1;i<pts.length;i++) tCtx.lineTo(pts[i][0],pts[i][1]);
+  } else {
+    for(let i=1;i<pts.length-1;i++) {
+      const [x0,y0]=pts[i], [x1,y1]=pts[i+1];
+      tCtx.quadraticCurveTo(x0,y0,(x0+x1)/2,(y0+y1)/2);
+    }
+    const last=pts[pts.length-1];
+    tCtx.lineTo(last[0],last[1]);
+  }
+  tCtx.stroke();
+  tCtx.restore();
+}
+
 // ═══════════════════════════════════════════════
 //  HIT TESTING
 // ═══════════════════════════════════════════════
@@ -562,22 +674,23 @@ function hit(el,wx,wy) {
   if (el.type==='curvedarrow') {
     return ptBezierDist(wx,wy,el.x1,el.y1,el.cx,el.cy,el.x2,el.y2) < m*2;
   }
+  const { x:lx, y:ly } = toLocal(el, wx, wy); // rotated shapes: test in their own local space
   const b = bbox(el);
   if (el.type==='ellipse') {
     const cx=b.x+b.w/2,cy=b.y+b.h/2,rx=b.w/2,ry=b.h/2;
     if(el.style.fillStyle!=='none'){
-      const dx=(wx-cx)/rx,dy=(wy-cy)/ry;
+      const dx=(lx-cx)/rx,dy=(ly-cy)/ry;
       if(dx*dx+dy*dy<=1) return true;
     }
-    const da=(wx-cx)/(rx+m),db=(wy-cy)/(ry+m);
+    const da=(lx-cx)/(rx+m),db=(ly-cy)/(ry+m);
     if(da*da+db*db>1) return false;
-    const dc=(wx-cx)/(rx-m),dd=(wy-cy)/(ry-m);
+    const dc=(lx-cx)/(rx-m),dd=(ly-cy)/(ry-m);
     return dc*dc+dd*dd>=1;
   }
-  const inside = wx>=b.x-m && wx<=b.x+b.w+m && wy>=b.y-m && wy<=b.y+b.h+m;
+  const inside = lx>=b.x-m && lx<=b.x+b.w+m && ly>=b.y-m && ly<=b.y+b.h+m;
   if(!inside) return false;
   if(el.style.fillStyle!=='none'||el.type==='text') return true;
-  return wx<=b.x+m || wx>=b.x+b.w-m || wy<=b.y+m || wy>=b.y+b.h-m;
+  return lx<=b.x+m || lx>=b.x+b.w-m || ly<=b.y+m || ly>=b.y+b.h-m;
 }
 
 // ═══════════════════════════════════════════════
@@ -596,6 +709,7 @@ function hpos(el, h) {
     if(h==='ctrl')  return {x:el.cx, y:el.cy};
   }
   const b=bbox(el);
+  if(h==='rot') return { x:b.x+b.w/2, y:b.y-ROT_HANDLE_DIST/vp.s };
   return {
     nw:{x:b.x,      y:b.y},     n:{x:b.x+b.w/2, y:b.y},
     ne:{x:b.x+b.w,  y:b.y},     e:{x:b.x+b.w,   y:b.y+b.h/2},
@@ -617,11 +731,148 @@ function hitHandle(el,wx,wy) {
     if(Math.hypot(wx-el.x2,wy-el.y2)<sz) return 'end';
     return null;
   }
+  const { x:lx, y:ly } = toLocal(el, wx, wy); // rotated shapes: handles are tested in local space
+  if(ROTATABLE_TYPES.includes(el.type)) {
+    const rp=hpos(el,'rot');
+    if(rp && Math.hypot(lx-rp.x, ly-rp.y)<sz*1.2) return 'rot';
+  }
   for(const h of HANDLES8) {
     const p=hpos(el,h);
-    if(p && Math.abs(wx-p.x)<sz && Math.abs(wy-p.y)<sz) return h;
+    if(p && Math.abs(lx-p.x)<sz && Math.abs(ly-p.y)<sz) return h;
   }
   return null;
+}
+
+// ═══════════════════════════════════════════════
+//  CONNECTION-POINT SNAPPING
+// ═══════════════════════════════════════════════
+function anchorPos(el, anchor) {
+  if(!el) return null;
+  if(anchor==='c') { const b=bbox(el); return { x:b.x+b.w/2, y:b.y+b.h/2 }; }
+  return hpos(el, anchor);
+}
+
+function collectConnPoints() {
+  const list=[];
+  for(const el of elements) {
+    if(!CONNECTABLE_TYPES.includes(el.type)) continue;
+    for(const h of HANDLES8) { const p=hpos(el,h); if(p) list.push({x:p.x,y:p.y,anchor:h,elId:el.id}); }
+    const b=bbox(el);
+    list.push({x:b.x+b.w/2,y:b.y+b.h/2,anchor:'c',elId:el.id});
+  }
+  return list;
+}
+
+function findSnap(wx,wy) {
+  const pts    = collectConnPoints();
+  const hoverR = HOVER_PX/vp.s, snapR = SNAP_PX/vp.s;
+  let nearest=null, nearestD=Infinity, cands=[];
+  for(const p of pts) {
+    const d=Math.hypot(wx-p.x,wy-p.y);
+    if(d<hoverR) { cands.push(p); if(d<nearestD){nearestD=d;nearest=p;} }
+  }
+  snapCandidates = cands;
+  snapPoint = (nearest && nearestD<=snapR) ? nearest : null;
+  return snapPoint;
+}
+
+function clearSnap() { snapPoint=null; snapCandidates=[]; }
+
+function updateBoundArrows(movedIds) {
+  for(const el of elements) {
+    if(el.type!=='arrow'&&el.type!=='line'&&el.type!=='curvedarrow') continue;
+    if(el.startBinding && movedIds.has(el.startBinding.elId)) {
+      const tgt=elements.find(e=>e.id===el.startBinding.elId);
+      const p=tgt&&anchorPos(tgt, el.startBinding.anchor);
+      if(p) { el.x1=p.x; el.y1=p.y; }
+    }
+    if(el.endBinding && movedIds.has(el.endBinding.elId)) {
+      const tgt=elements.find(e=>e.id===el.endBinding.elId);
+      const p=tgt&&anchorPos(tgt, el.endBinding.anchor);
+      if(p) { el.x2=p.x; el.y2=p.y; }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SMART ALIGNMENT / EQUAL-SPACING GUIDES
+// ═══════════════════════════════════════════════
+function origSelectionBBox(ids) {
+  let ax=Infinity,ay=Infinity,bx=-Infinity,by=-Infinity;
+  for(const id of ids) {
+    const or=dragSnap.els.find(e=>e.id===id); if(!or) continue;
+    const b=bbox(or);
+    ax=Math.min(ax,b.x); ay=Math.min(ay,b.y);
+    bx=Math.max(bx,b.x+b.w); by=Math.max(by,b.y+b.h);
+  }
+  if(ax===Infinity) return null;
+  return { x:ax, y:ay, w:bx-ax, h:by-ay };
+}
+
+// Computes an alignment/equal-spacing correction for a drag of `ids` by (dx,dy).
+// Returns a corrected {dx,dy} and populates `guideLines` for rendering.
+function applySmartGuides(ids, dx, dy) {
+  guideLines = [];
+  if(!smartGuides) return { dx, dy };
+  const orig = origSelectionBBox(ids);
+  if(!orig) return { dx, dy };
+  const others = elements.filter(e=>!ids.includes(e.id)).map(bbox);
+  if(!others.length) return { dx, dy };
+
+  const thresh = ALIGN_PX/vp.s;
+  let sel = { x:orig.x+dx, y:orig.y+dy, w:orig.w, h:orig.h };
+
+  // ── edge / center alignment ──
+  let bestXAbs=thresh, corrX=0, guideX=null;
+  let bestYAbs=thresh, corrY=0, guideY=null;
+  for(const b of others) {
+    const oXs=[b.x,b.x+b.w/2,b.x+b.w], oYs=[b.y,b.y+b.h/2,b.y+b.h];
+    for(const sx of [sel.x,sel.x+sel.w/2,sel.x+sel.w]) for(const ox of oXs) {
+      const d=ox-sx;
+      if(Math.abs(d)<bestXAbs) { bestXAbs=Math.abs(d); corrX=d; guideX={pos:ox, y1:Math.min(sel.y,b.y), y2:Math.max(sel.y+sel.h,b.y+b.h)}; }
+    }
+    for(const sy of [sel.y,sel.y+sel.h/2,sel.y+sel.h]) for(const oy of oYs) {
+      const d=oy-sy;
+      if(Math.abs(d)<bestYAbs) { bestYAbs=Math.abs(d); corrY=d; guideY={pos:oy, x1:Math.min(sel.x,b.x), x2:Math.max(sel.x+sel.w,b.x+b.w)}; }
+    }
+  }
+  let ndx=dx+corrX, ndy=dy+corrY;
+  if(guideX) guideLines.push({type:'v', pos:guideX.pos, from:guideX.y1-16, to:guideX.y2+16});
+  if(guideY) guideLines.push({type:'h', pos:guideY.pos, from:guideY.x1-16, to:guideY.x2+16});
+
+  // ── equal spacing (X axis: nearest left/right neighbor with vertical overlap) ──
+  sel = { x:orig.x+ndx, y:orig.y+ndy, w:orig.w, h:orig.h };
+  let leftB=null, leftGap=Infinity, rightB=null, rightGap=Infinity;
+  for(const b of others) {
+    const overlapY=Math.min(sel.y+sel.h,b.y+b.h)-Math.max(sel.y,b.y);
+    if(overlapY<=0) continue;
+    if(b.x+b.w<=sel.x) { const g=sel.x-(b.x+b.w); if(g<leftGap){leftGap=g;leftB=b;} }
+    else if(b.x>=sel.x+sel.w) { const g=b.x-(sel.x+sel.w); if(g<rightGap){rightGap=g;rightB=b;} }
+  }
+  if(leftB && rightB && Math.abs(leftGap-rightGap)<thresh) {
+    const avail=rightB.x-(leftB.x+leftB.w)-sel.w, gap=avail/2;
+    const targetX=leftB.x+leftB.w+gap;
+    ndx += (targetX-sel.x);
+    guideLines.push({type:'space-x', y:sel.y+sel.h/2, leftX:leftB.x+leftB.w, midX1:targetX, midX2:targetX+sel.w, rightX:rightB.x});
+  }
+
+  // ── equal spacing (Y axis: nearest top/bottom neighbor with horizontal overlap) ──
+  sel = { x:orig.x+ndx, y:orig.y+ndy, w:orig.w, h:orig.h };
+  let topB=null, topGap=Infinity, botB=null, botGap=Infinity;
+  for(const b of others) {
+    const overlapX=Math.min(sel.x+sel.w,b.x+b.w)-Math.max(sel.x,b.x);
+    if(overlapX<=0) continue;
+    if(b.y+b.h<=sel.y) { const g=sel.y-(b.y+b.h); if(g<topGap){topGap=g;topB=b;} }
+    else if(b.y>=sel.y+sel.h) { const g=b.y-(sel.y+sel.h); if(g<botGap){botGap=g;botB=b;} }
+  }
+  if(topB && botB && Math.abs(topGap-botGap)<thresh) {
+    const avail=botB.y-(topB.y+topB.h)-sel.h, gap=avail/2;
+    const targetY=topB.y+topB.h+gap;
+    ndy += (targetY-sel.y);
+    guideLines.push({type:'space-y', x:sel.x+sel.w/2, topY:topB.y+topB.h, midY1:targetY, midY2:targetY+sel.h, botY:botB.y});
+  }
+
+  return { dx:ndx, dy:ndy };
 }
 
 // ═══════════════════════════════════════════════
@@ -637,7 +888,8 @@ function render() {
   ctx.translate(vp.x,vp.y);
   ctx.scale(vp.s,vp.s);
 
-  for(const el of elements) drawEl(el, ctx, rc);
+  // the element being text-edited is shown by the textarea overlay instead
+  for(const el of elements) if(el.id!==editId) drawEl(el, ctx, rc);
   if(curEl) drawEl(curEl, ctx, rc);
 
   for(const id of selIds) {
@@ -645,7 +897,53 @@ function render() {
     if(el) drawSel(el);
   }
   if(selIds.length>1) drawMultiBox();
+  if(snapCandidates.length) drawSnapIndicators();
+  if(guideLines.length) drawGuideLines();
 
+  ctx.restore();
+}
+
+function drawGuideLines() {
+  ctx.save();
+  const tick=5/vp.s;
+  for(const g of guideLines) {
+    if(g.type==='v') {
+      ctx.strokeStyle='#e64980'; ctx.lineWidth=1/vp.s; ctx.setLineDash([4/vp.s,3/vp.s]);
+      ctx.beginPath(); ctx.moveTo(g.pos,g.from); ctx.lineTo(g.pos,g.to); ctx.stroke();
+    } else if(g.type==='h') {
+      ctx.strokeStyle='#e64980'; ctx.lineWidth=1/vp.s; ctx.setLineDash([4/vp.s,3/vp.s]);
+      ctx.beginPath(); ctx.moveTo(g.from,g.pos); ctx.lineTo(g.to,g.pos); ctx.stroke();
+    } else if(g.type==='space-x') {
+      ctx.strokeStyle='#f08c00'; ctx.lineWidth=1.4/vp.s; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(g.leftX,g.y); ctx.lineTo(g.midX1,g.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(g.midX2,g.y); ctx.lineTo(g.rightX,g.y); ctx.stroke();
+      for(const tx of [g.leftX,g.midX1,g.midX2,g.rightX]) { ctx.beginPath(); ctx.moveTo(tx,g.y-tick); ctx.lineTo(tx,g.y+tick); ctx.stroke(); }
+    } else if(g.type==='space-y') {
+      ctx.strokeStyle='#f08c00'; ctx.lineWidth=1.4/vp.s; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(g.x,g.topY); ctx.lineTo(g.x,g.midY1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(g.x,g.midY2); ctx.lineTo(g.x,g.botY); ctx.stroke();
+      for(const ty of [g.topY,g.midY1,g.midY2,g.botY]) { ctx.beginPath(); ctx.moveTo(g.x-tick,ty); ctx.lineTo(g.x+tick,ty); ctx.stroke(); }
+    }
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function drawSnapIndicators() {
+  const rHollow=4/vp.s, rSnap=6/vp.s;
+  ctx.save();
+  for(const p of snapCandidates) {
+    const isActive = snapPoint && p.elId===snapPoint.elId && p.anchor===snapPoint.anchor;
+    if(isActive) continue;
+    ctx.beginPath(); ctx.arc(p.x,p.y,rHollow,0,Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+    ctx.strokeStyle='rgba(108,99,255,.55)'; ctx.lineWidth=1.3/vp.s; ctx.stroke();
+  }
+  if(snapPoint) {
+    ctx.beginPath(); ctx.arc(snapPoint.x,snapPoint.y,rSnap,0,Math.PI*2);
+    ctx.fillStyle='#6c63ff'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2/vp.s; ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -684,6 +982,11 @@ function drawEl(el, tCtx, tRc) {
   const b = bbox(el);
   const opts = roughOpts(el);
 
+  if(ROTATABLE_TYPES.includes(el.type) && el.rot) {
+    const cx=b.x+b.w/2, cy=b.y+b.h/2;
+    tCtx.translate(cx,cy); tCtx.rotate(el.rot); tCtx.translate(-cx,-cy);
+  }
+
   switch(el.type) {
     case 'rectangle':
       tRc.rectangle(b.x,b.y,b.w,b.h,opts); break;
@@ -710,15 +1013,18 @@ function drawEl(el, tCtx, tRc) {
     }
     case 'freehand':
       if(el.points&&el.points.length>1) {
-        const path=el.points.map(([x,y],i)=>(i?`L${x},${y}`:`M${x},${y}`)).join('');
-        tRc.path(path,{...opts,fill:undefined,roughness:Math.min(opts.roughness,0.8)});
+        // Freehand bypasses rough.js entirely: its path renderer samples
+        // curves into small segments and perturbs each one, which reads as
+        // a flicker along the stroke even at low roughness. A native canvas
+        // curve stays perfectly continuous instead.
+        drawSmoothFreehand(el, tCtx);
       }
       break;
     case 'text': {
       const s=el.style;
       const font=`${s.fontStyle==='italic'?'italic ':''}`+
                  `${s.fontWeight==='bold'?'bold ':''}`+
-                 `${s.fontSize}px '${s.fontFamily}',cursive`;
+                 `${s.fontSize}px '${s.fontFamily}','Assistant',cursive`;
       tCtx.font=font;
       tCtx.fillStyle=s.strokeColor;
       tCtx.textAlign=s.textAlign||'left';
@@ -727,7 +1033,10 @@ function drawEl(el, tCtx, tRc) {
       let tx=el.x;
       if(s.textAlign==='center') tx=el.x+(el.w||200)/2;
       if(s.textAlign==='right')  tx=el.x+(el.w||200);
-      for(let i=0;i<lines.length;i++) tCtx.fillText(lines[i],tx,el.y+s.fontSize+i*lh);
+      // centre each line in a 1.35 line box — the same layout the edit textarea uses
+      tCtx.textBaseline='middle';
+      tCtx.direction='ltr';
+      for(let i=0;i<lines.length;i++) tCtx.fillText(lines[i],tx,el.y+lh*(i+0.5));
       break;
     }
   }
@@ -778,6 +1087,10 @@ function drawHeads(el, tCtx, tRc, dx, dy) {
 function drawSel(el) {
   const b=bbox(el), p=8/vp.s;
   ctx.save();
+  if(ROTATABLE_TYPES.includes(el.type) && el.rot) {
+    const cx=b.x+b.w/2, cy=b.y+b.h/2;
+    ctx.translate(cx,cy); ctx.rotate(el.rot); ctx.translate(-cx,-cy);
+  }
   ctx.strokeStyle='#6c63ff';
   ctx.lineWidth=1.5/vp.s;
   ctx.setLineDash([5/vp.s,4/vp.s]);
@@ -814,6 +1127,15 @@ function drawSel(el) {
     const pos=hpos(el,h); if(!pos) continue;
     ctx.fillStyle='#fff'; ctx.strokeStyle='#6c63ff'; ctx.lineWidth=1.5/vp.s;
     ctx.beginPath(); ctx.rect(pos.x-sz,pos.y-sz,sz*2,sz*2); ctx.fill(); ctx.stroke();
+  }
+
+  // Rotation handle — small circle above the top-center handle, on a guide line
+  if(ROTATABLE_TYPES.includes(el.type)) {
+    const n=hpos(el,'n'), r=hpos(el,'rot');
+    ctx.strokeStyle='rgba(108,99,255,0.5)'; ctx.lineWidth=1/vp.s; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(r.x,r.y); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.strokeStyle='#6c63ff'; ctx.lineWidth=1.5/vp.s;
+    ctx.beginPath(); ctx.arc(r.x,r.y,sz*0.9,0,Math.PI*2); ctx.fill(); ctx.stroke();
   }
   ctx.restore();
 }
@@ -886,7 +1208,16 @@ function onDown(e) {
 
   if(tool==='eraser') {
     for(let i=elements.length-1;i>=0;i--) {
-      if(hit(elements[i],wp.x,wp.y)){saveHist();elements.splice(i,1);render();break;}
+      if(hit(elements[i],wp.x,wp.y)){
+        saveHist();
+        const delId=elements[i].id;
+        elements.splice(i,1);
+        for(const el of elements) {
+          if(el.startBinding && el.startBinding.elId===delId) el.startBinding=null;
+          if(el.endBinding && el.endBinding.elId===delId) el.endBinding=null;
+        }
+        render();break;
+      }
     }
     return;
   }
@@ -894,9 +1225,15 @@ function onDown(e) {
   if(tool==='text') { startText(wp.x,wp.y); return; }
 
   drawing=true;
-  drawStart={...wp};
-  curEl=mkEl(tool,wp.x,wp.y,wp.x,wp.y);
-  if(tool==='freehand') { fhPts=[[wp.x,wp.y]]; curEl.points=fhPts; }
+  let sx=wp.x, sy=wp.y, startBind=null;
+  if(tool==='arrow'||tool==='line'||tool==='curvedarrow') {
+    const snap=findSnap(wp.x,wp.y);
+    if(snap) { sx=snap.x; sy=snap.y; startBind={elId:snap.elId,anchor:snap.anchor}; }
+  }
+  drawStart={x:sx,y:sy};
+  curEl=mkEl(tool,sx,sy,sx,sy);
+  if(startBind) curEl.startBinding=startBind;
+  if(tool==='freehand') { fhPts=[[wp.x,wp.y]]; curEl.points=fhPts; clearSnap(); }
 }
 
 function onMove(e) {
@@ -913,25 +1250,43 @@ function onMove(e) {
     const orig=dragSnap.el, ob=bbox(orig);
 
     if(el.type==='curvedarrow') {
-      if(resHandle==='ctrl')  { el.cx=wp.x; el.cy=wp.y; el.ctrlSet=true; }
-      if(resHandle==='start') { el.x1=wp.x; el.y1=wp.y; }
-      if(resHandle==='end')   { el.x2=wp.x; el.y2=wp.y; }
+      if(resHandle==='ctrl')  { el.cx=wp.x; el.cy=wp.y; el.ctrlSet=true; clearSnap(); }
+      if(resHandle==='start') { const sn=findSnap(wp.x,wp.y); if(sn){el.x1=sn.x;el.y1=sn.y;el.startBinding={elId:sn.elId,anchor:sn.anchor};} else {el.x1=wp.x;el.y1=wp.y;el.startBinding=null;} }
+      if(resHandle==='end')   { const sn=findSnap(wp.x,wp.y); if(sn){el.x2=sn.x;el.y2=sn.y;el.endBinding={elId:sn.elId,anchor:sn.anchor};} else {el.x2=wp.x;el.y2=wp.y;el.endBinding=null;} }
     } else if(el.type==='arrow'||el.type==='line') {
-      if(resHandle==='start'){el.x1=wp.x;el.y1=wp.y;}
-      if(resHandle==='end')  {el.x2=wp.x;el.y2=wp.y;}
+      if(resHandle==='start'){ const sn=findSnap(wp.x,wp.y); if(sn){el.x1=sn.x;el.y1=sn.y;el.startBinding={elId:sn.elId,anchor:sn.anchor};} else {el.x1=wp.x;el.y1=wp.y;el.startBinding=null;} }
+      if(resHandle==='end')  { const sn=findSnap(wp.x,wp.y); if(sn){el.x2=sn.x;el.y2=sn.y;el.endBinding={elId:sn.elId,anchor:sn.anchor};} else {el.x2=wp.x;el.y2=wp.y;el.endBinding=null;} }
+    } else if(resHandle==='rot') {
+      clearSnap();
+      const cx=ob.x+ob.w/2, cy=ob.y+ob.h/2;
+      let rot = Math.atan2(wp.y-cy, wp.x-cx) + Math.PI/2;
+      rot = ((rot % (Math.PI*2)) + Math.PI*2) % (Math.PI*2); // normalize to [0, 2π)
+      const step = Math.PI/4; // 45°
+      const nearest = Math.round(rot/step)*step % (Math.PI*2);
+      let diff = Math.abs(rot-nearest); diff = Math.min(diff, Math.PI*2-diff);
+      el.rot = (diff < ROT_SNAP_DEG*Math.PI/180) ? nearest : rot;
+      updateBoundArrows(new Set([el.id]));
     } else {
+      clearSnap();
+      // Resize in the shape's own (unrotated) local space, pivoting on its
+      // original center, so a rotated shape resizes along its own axes.
+      const rot = orig.rot||0;
+      const lp = rotatePoint(wp.x, wp.y, ob.x+ob.w/2, ob.y+ob.h/2, -rot);
       let {x,y,w,h}=ob;
-      if(resHandle.includes('e')) w=wp.x-x;
-      if(resHandle.includes('s')) h=wp.y-y;
-      if(resHandle.includes('w')){w=ob.x+ob.w-wp.x;x=wp.x;}
-      if(resHandle.includes('n')){h=ob.y+ob.h-wp.y;y=wp.y;}
+      if(resHandle.includes('e')) w=lp.x-x;
+      if(resHandle.includes('s')) h=lp.y-y;
+      if(resHandle.includes('w')){w=ob.x+ob.w-lp.x;x=lp.x;}
+      if(resHandle.includes('n')){h=ob.y+ob.h-lp.y;y=lp.y;}
       el.x=x;el.y=y;el.w=Math.max(1,w);el.h=Math.max(1,h);
+      updateBoundArrows(new Set([el.id]));
     }
     render(); return;
   }
 
   if(dragging&&selIds.length>0) {
-    const dx=wp.x-dragSnap.wp.x, dy=wp.y-dragSnap.wp.y;
+    let dx=wp.x-dragSnap.wp.x, dy=wp.y-dragSnap.wp.y;
+    if(!e.shiftKey) { const adj=applySmartGuides(selIds,dx,dy); dx=adj.dx; dy=adj.dy; }
+    else guideLines=[];
     for(const id of selIds) {
       const el=elements.find(e=>e.id===id);
       const or=dragSnap.els.find(e=>e.id===id);
@@ -940,18 +1295,28 @@ function onMove(e) {
         el.x1=or.x1+dx;el.y1=or.y1+dy;
         el.x2=or.x2+dx;el.y2=or.y2+dy;
         el.cx=or.cx+dx;el.cy=or.cy+dy;
+        el.startBinding=null; el.endBinding=null;
       } else if(el.type==='arrow'||el.type==='line'){
         el.x1=or.x1+dx;el.y1=or.y1+dy;el.x2=or.x2+dx;el.y2=or.y2+dy;
+        el.startBinding=null; el.endBinding=null;
       } else if(el.type==='freehand') {
         el.points=or.points.map(([px,py])=>[px+dx,py+dy]);
       } else { el.x=or.x+dx; el.y=or.y+dy; }
     }
+    updateBoundArrows(new Set(selIds));
     render(); return;
   }
 
   if(drawing) {
     if(tool==='freehand') {
-      fhPts.push([wp.x,wp.y]); curEl.points=[...fhPts]; render(); return;
+      const last=fhPts[fhPts.length-1];
+      if(!last || Math.hypot(wp.x-last[0],wp.y-last[1])>2/vp.s) {
+        const FH_SMOOTH=0.45; // 0=raw jittery input, closer to 1=heavier lag
+        const px = last ? last[0]+(wp.x-last[0])*(1-FH_SMOOTH) : wp.x;
+        const py = last ? last[1]+(wp.y-last[1])*(1-FH_SMOOTH) : wp.y;
+        fhPts.push([px,py]); curEl.points=[...fhPts]; render();
+      }
+      return;
     }
     let x1=drawStart.x,y1=drawStart.y,x2=wp.x,y2=wp.y;
     if(e.shiftKey) {
@@ -962,6 +1327,15 @@ function onMove(e) {
         const dx=x2-x1,dy=y2-y1,ang=Math.round(Math.atan2(dy,dx)/(Math.PI/4))*(Math.PI/4),l=Math.hypot(dx,dy);
         x2=x1+Math.cos(ang)*l; y2=y1+Math.sin(ang)*l;
       }
+    }
+    const isLineTool=tool==='arrow'||tool==='line'||tool==='curvedarrow';
+    if(isLineTool && !e.shiftKey) {
+      const snap=findSnap(x2,y2);
+      if(snap) { x2=snap.x; y2=snap.y; curEl.endBinding={elId:snap.elId,anchor:snap.anchor}; }
+      else curEl.endBinding=null;
+    } else {
+      clearSnap();
+      if(isLineTool) curEl.endBinding=null;
     }
     if(tool==='arrow'||tool==='line') {
       curEl.x1=x1;curEl.y1=y1;curEl.x2=x2;curEl.y2=y2;
@@ -981,6 +1355,8 @@ function onMove(e) {
 }
 
 function onUp(e) {
+  clearSnap();
+  guideLines=[];
   if(panning) { panning=false; canvas.style.cursor=tool==='pan'?'grab':''; return; }
   if(resizing) { resizing=false;resHandle=null;saveHist();render();return; }
   if(dragging) { dragging=false;saveHist();return; }
@@ -1031,6 +1407,7 @@ function updateCursor(wp) {
       const h=hitHandle(sel,wp.x,wp.y);
       if(h) {
         if(h==='ctrl') { canvas.style.cursor='move'; return; }
+        if(h==='rot')  { canvas.style.cursor='grab'; return; }
         const m={nw:'nw-resize',n:'n-resize',ne:'ne-resize',e:'e-resize',
                  se:'se-resize',s:'s-resize',sw:'sw-resize',w:'w-resize',
                  start:'move',end:'move'};
@@ -1054,34 +1431,45 @@ function startText(wx,wy,existing) {
   editId=el.id; selIds=[el.id];
 
   const sp=w2s(el.x,el.y);
-  const tbW=document.getElementById('toolbar').offsetWidth;
-  const mbH=document.querySelector('.menu-bar').offsetHeight;
+  const cr=canvas.getBoundingClientRect();
   const fs=el.style.fontSize*vp.s;
+  const wPx=(el.w||200)*vp.s, hPx=(el.h||40)*vp.s;
 
+  // padding:0 + same line-height as the canvas renderer, so the overlay sits
+  // exactly on top of where the text is drawn (no double image, no jump)
   ta.style.cssText=`
-    display:block; left:${sp.x+tbW}px; top:${sp.y+mbH}px;
+    display:block; left:${cr.left+sp.x}px; top:${cr.top+sp.y}px; padding:0;
     font:${el.style.fontStyle==='italic'?'italic ':''}`+
-    `${el.style.fontWeight==='bold'?'bold ':''}${fs}px '${el.style.fontFamily}',cursive;
-    color:${el.style.strokeColor}; width:${Math.max(100,(el.w||200)*vp.s)}px;
-    min-width:60px; min-height:${fs*1.4}px; height:auto;
+    `${el.style.fontWeight==='bold'?'bold ':''}${fs}px/1.35 '${el.style.fontFamily}','Assistant',cursive;
+    color:${el.style.strokeColor}; text-align:${el.style.textAlign||'left'};
+    width:${Math.max(100,wPx)}px; min-width:60px; min-height:${fs*1.35}px; height:auto;
+    transform-origin:${wPx/2}px ${hPx/2}px; transform:rotate(${el.rot||0}rad);
   `;
   ta.value=el.text||'';
   ta.focus(); ta.select();
+  autoResize(ta);
   render();
 }
 
 function finishText() {
   const ta=document.getElementById('te');
   if(editId) {
-    const el=elements.find(e=>e.id===editId);
+    const id=editId;
+    const el=elements.find(e=>e.id===id);
     if(el) {
       el.text=ta.value;
-      if(!el.text.trim()) { elements=elements.filter(e=>e.id!==editId);selIds=[]; }
-      else {
+      if(!el.text.trim()) {
+        elements=elements.filter(e=>e.id!==id); selIds=[];
+        for(const e2 of elements) {
+          if(e2.startBinding && e2.startBinding.elId===id) e2.startBinding=null;
+          if(e2.endBinding && e2.endBinding.elId===id) e2.endBinding=null;
+        }
+      } else {
         saveHist();
         const lines=el.text.split('\n');
         el.w=Math.max(...lines.map(l=>l.length))*el.style.fontSize*0.62+20;
         el.h=lines.length*el.style.fontSize*1.35+10;
+        updateBoundArrows(new Set([id]));
       }
     }
     editId=null;
@@ -1099,6 +1487,8 @@ function autoResize(ta) {
 // ═══════════════════════════════════════════════
 function setTool(t) {
   tool=t;
+  clearSnap();
+  guideLines=[];
   document.querySelectorAll('.tool-btn[data-tool]').forEach(b=>
     b.classList.toggle('active', b.dataset.tool===t));
   canvas.style.cursor=t==='pan'?'grab':t==='text'?'text':t==='select'?'default':'crosshair';
@@ -1167,6 +1557,9 @@ document.addEventListener('keydown', e=>{
       case 's': e.preventDefault(); saveFile(); break;
       case 'd': e.preventDefault(); duplicateSelected(); break;
       case 'a': e.preventDefault(); selAll(); break;
+      case 'c': e.preventDefault(); copySelected(); break;
+      case 'x': e.preventDefault(); cutSelected(); break;
+      case 'v': e.preventDefault(); pasteClipboard(); break;
     }
     return;
   }
@@ -1189,23 +1582,70 @@ document.addEventListener('keydown', e=>{
 // ═══════════════════════════════════════════════
 function deleteSelected() {
   if(!selIds.length) return;
-  saveHist(); elements=elements.filter(e=>!selIds.includes(e.id));
+  saveHist();
+  const delSet=new Set(selIds);
+  elements=elements.filter(e=>!delSet.has(e.id));
+  for(const el of elements) {
+    if(el.startBinding && delSet.has(el.startBinding.elId)) el.startBinding=null;
+    if(el.endBinding && delSet.has(el.endBinding.elId)) el.endBinding=null;
+  }
   selIds=[]; updateSidebar(); render();
 }
 function duplicateSelected() {
   if(!selIds.length) return; saveHist();
-  const newIds=[];
+  const idMap={};
+  const copies=[];
   for(const id of selIds) {
     const el=elements.find(e=>e.id===id); if(!el) continue;
-    const cp=JSON.parse(JSON.stringify(el)); cp.id=nid++;
+    const cp=JSON.parse(JSON.stringify(el)); const newId=nid++;
+    idMap[el.id]=newId; cp.id=newId;
+    copies.push(cp);
+  }
+  for(const cp of copies) {
     if(cp.x!==undefined){cp.x+=22;cp.y+=22;}
     if(cp.x1!==undefined){cp.x1+=22;cp.y1+=22;cp.x2+=22;cp.y2+=22;}
     if(cp.cx!==undefined){cp.cx+=22;cp.cy+=22;}
     if(cp.points) cp.points=cp.points.map(([x,y])=>[x+22,y+22]);
-    elements.push(cp); newIds.push(cp.id);
+    if(cp.startBinding && idMap[cp.startBinding.elId]!==undefined) cp.startBinding={...cp.startBinding, elId:idMap[cp.startBinding.elId]};
+    if(cp.endBinding && idMap[cp.endBinding.elId]!==undefined) cp.endBinding={...cp.endBinding, elId:idMap[cp.endBinding.elId]};
+    elements.push(cp);
   }
-  selIds=newIds; updateSidebar(); render();
+  selIds=copies.map(c=>c.id); updateSidebar(); render();
 }
+
+// ── Copy / Cut / Paste (in-app clipboard) ──────────
+let clipboard = null;
+function copySelected() {
+  if(!selIds.length) return;
+  clipboard = selIds.map(id=>elements.find(e=>e.id===id)).filter(Boolean).map(el=>JSON.parse(JSON.stringify(el)));
+}
+function cutSelected() {
+  if(!selIds.length) return;
+  copySelected();
+  deleteSelected();
+}
+function pasteClipboard() {
+  if(!clipboard || !clipboard.length) return;
+  saveHist();
+  const idMap={};
+  const copies=[];
+  for(const el of clipboard) {
+    const cp=JSON.parse(JSON.stringify(el)); const newId=nid++;
+    idMap[el.id]=newId; cp.id=newId;
+    copies.push(cp);
+  }
+  for(const cp of copies) {
+    if(cp.x!==undefined){cp.x+=22;cp.y+=22;}
+    if(cp.x1!==undefined){cp.x1+=22;cp.y1+=22;cp.x2+=22;cp.y2+=22;}
+    if(cp.cx!==undefined){cp.cx+=22;cp.cy+=22;}
+    if(cp.points) cp.points=cp.points.map(([x,y])=>[x+22,y+22]);
+    if(cp.startBinding && idMap[cp.startBinding.elId]!==undefined) cp.startBinding={...cp.startBinding, elId:idMap[cp.startBinding.elId]};
+    if(cp.endBinding && idMap[cp.endBinding.elId]!==undefined) cp.endBinding={...cp.endBinding, elId:idMap[cp.endBinding.elId]};
+    elements.push(cp);
+  }
+  selIds=copies.map(c=>c.id); updateSidebar(); render();
+}
+
 function selAll() { selIds=elements.map(e=>e.id); updateSidebar(); render(); }
 function bringFront() {
   if(!selIds.length) return; saveHist();
@@ -1413,6 +1853,7 @@ function initPalettes() {
 //  INIT
 // ═══════════════════════════════════════════════
 initPalettes();
+document.getElementById('chk-smartguides').checked = smartGuides;
 resize();
 </script>
 </body>
