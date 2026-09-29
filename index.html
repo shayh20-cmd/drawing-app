@@ -1193,6 +1193,9 @@ canvas.addEventListener('contextmenu', e=>e.preventDefault());
 function onDown(e) {
   if(e.button!==0&&e.button!==1) return;
   e.preventDefault();
+  // preventDefault keeps focus in the textarea, so its blur never fires:
+  // a click outside the text box ends editing explicitly
+  if(editId) { document.getElementById('te').blur(); finishText(); render(); return; }
   const sp=epos(e), wp=s2w(sp.sx,sp.sy);
 
   if(tool==='pan'||e.button===1||e.altKey) {
