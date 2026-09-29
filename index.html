@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nunito:wght@400;600;700&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="icons.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -62,6 +63,16 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
   white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:300;
 }
 .tool-btn:hover::after{opacity:1}
+
+/* ── ICON PICKER ── */
+.icon-pop{position:absolute;left:60px;top:10px;z-index:250;background:#fff;border:1px solid var(--border);
+  border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.14);padding:10px;display:none;
+  grid-template-columns:repeat(5,40px);gap:4px;max-height:calc(100vh - 40px);overflow-y:auto}
+.icon-pop.open{display:grid}
+.icon-pop button{width:40px;height:40px;border:1px solid transparent;border-radius:7px;background:none;cursor:pointer;padding:6px}
+.icon-pop button:hover{background:#f3f2ff;border-color:var(--purple)}
+.icon-pop img{width:100%;height:100%;display:block;object-fit:contain}
+.icon-pop .icon-add{border:1px dashed #c9c6ff;color:var(--purple)}
 
 /* ── CANVAS CONTAINER ── */
 .canvas-wrap{flex:1;position:relative;overflow:hidden}
@@ -232,6 +243,11 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
         <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
       </svg>
     </button>
+    <button class="tool-btn" id="btn-icons" data-tip="אייקונים" onclick="toggleIconPop()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/><circle cx="17.5" cy="6.5" r="3.5"/><path d="M6.5 14l3.5 6H3z"/><path d="M17.5 14l1 2.3 2.5.2-1.9 1.6.6 2.4-2.2-1.3-2.2 1.3.6-2.4-1.9-1.6 2.5-.2z"/>
+      </svg>
+    </button>
     <div class="tool-sep"></div>
     <button class="tool-btn" data-tool="eraser" data-tip="מחק (X)" onclick="setTool('eraser')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -256,6 +272,8 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
   <!-- CANVAS -->
   <div class="canvas-wrap" id="wrap">
     <canvas id="c"></canvas>
+    <div class="icon-pop" id="icon-pop"></div>
+    <input type="file" id="icon-file" accept="image/png,image/svg+xml,image/jpeg,image/webp" multiple style="display:none" onchange="loadIconFiles(this.files);this.value=''">
     <div class="hint">V=בחירה · H=הזזה · R=מלבן · E=עיגול · A=חץ · C=חץ מעוקל · T=טקסט · P=עיפרון · Del=מחק · Ctrl+Z=בטל</div>
   </div>
 
@@ -477,7 +495,7 @@ let fhPts    = [];
 let editId   = null;
 
 // Rotation
-const ROTATABLE_TYPES = ['rectangle','ellipse','diamond','text'];
+const ROTATABLE_TYPES = ['rectangle','ellipse','diamond','text','icon'];
 const ROT_HANDLE_DIST = 26; // screen px above the top-center handle
 const ROT_SNAP_DEG    = 5;  // magnetic snap window around each 45° step
 function rotatePoint(px,py,cx,cy,rot) {
@@ -493,7 +511,7 @@ function toLocal(el, wx, wy) {
 }
 
 // Connection-point snapping
-const CONNECTABLE_TYPES = ['rectangle','ellipse','diamond','text'];
+const CONNECTABLE_TYPES = ['rectangle','ellipse','diamond','text','icon'];
 const SNAP_PX  = 14;  // distance (screen px) at which a point-target snaps
 const HOVER_PX = 60;  // distance (screen px) at which nearby points light up
 let snapPoint      = null; // {x,y,elId,anchor} currently snapped-to point
@@ -990,6 +1008,11 @@ function drawEl(el, tCtx, tRc) {
   switch(el.type) {
     case 'rectangle':
       tRc.rectangle(b.x,b.y,b.w,b.h,opts); break;
+    case 'icon': {
+      const img=iconImage(el);
+      if(img.complete&&img.naturalWidth) tCtx.drawImage(img,b.x,b.y,b.w,b.h);
+      break;
+    }
     case 'ellipse':
       tRc.ellipse(b.x+b.w/2,b.y+b.h/2,b.w,b.h,opts); break;
     case 'diamond': {
@@ -1740,6 +1763,105 @@ async function exportPDF() {
 }
 
 // ═══════════════════════════════════════════════
+//  ICONS (PNG, recolored per element)
+// ═══════════════════════════════════════════════
+const iconCache = {};
+function iconImage(el) {
+  const s=el.style;
+  const bg = s.fillColor==='transparent' ? '' : s.fillColor;
+  const sw = Math.max(0.6, s.strokeWidth*0.8);
+  const key = (el.src||el.icon)+'|'+s.strokeColor+'|'+bg+'|'+sw;
+  if(iconCache[key]) return iconCache[key];
+  const img=new Image();
+  const size=256;
+  const src=new Image();
+  src.onload=()=>{ // compose rounded-square background + icon, rasterize to PNG
+    const c=document.createElement('canvas'); c.width=c.height=size;
+    const g=c.getContext('2d');
+    if(bg) { g.fillStyle=bg; g.beginPath(); g.roundRect(0,0,size,size,size*0.22); g.fill(); }
+    const pad=size*(bg?0.18:0.04);
+    const iw=src.naturalWidth||size, ih=src.naturalHeight||size, k=Math.min((size-2*pad)/iw,(size-2*pad)/ih);
+    g.drawImage(src,(size-iw*k)/2,(size-ih*k)/2,iw*k,ih*k);
+    img.onload=()=>render();
+    img.src=c.toDataURL('image/png');
+  };
+  if(el.src) src.src=el.src;
+  else {
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 26 26" width="${size}" height="${size}" fill="none" stroke="${s.strokeColor}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.icon][1]}</svg>`;
+    src.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  }
+  return iconCache[key]=img;
+}
+
+// user-loaded shapes, kept in this browser
+let customIcons=[];
+try { customIcons=JSON.parse(localStorage.getItem('sketchdraw_customicons')||'[]'); } catch(err) {}
+function saveCustomIcons() {
+  try { localStorage.setItem('sketchdraw_customicons',JSON.stringify(customIcons)); }
+  catch(err) { alert('אין מספיק מקום לשמור את הצורות בדפדפן'); }
+}
+
+function buildIconPop() {
+  const pop=document.getElementById('icon-pop');
+  pop.innerHTML='';
+  const add=(title,imgSrc,onclick,oncontext)=>{
+    const b=document.createElement('button'); b.title=title;
+    const im=document.createElement('img'); b.appendChild(im);
+    if(typeof imgSrc==='string') im.src=imgSrc; else imgSrc.then(u=>im.src=u);
+    b.onclick=onclick; if(oncontext) b.oncontextmenu=oncontext;
+    pop.appendChild(b);
+  };
+  ICONS.forEach((ic,i)=>add(`${i+1}. ${ic[0]}`, iconPng(i,80,'#1c2b3a'), ()=>insertIcon({icon:i})));
+  customIcons.forEach((u,i)=>add('צורה שנטענה (קליק ימני למחיקה)', u, ()=>insertIcon({src:u}), e=>{
+    e.preventDefault(); customIcons.splice(i,1); saveCustomIcons(); buildIconPop();
+  }));
+  const up=document.createElement('button'); up.className='icon-add'; up.title='טען צורות (PNG / SVG / JPG)';
+  up.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  up.onclick=()=>document.getElementById('icon-file').click();
+  pop.appendChild(up);
+}
+function loadIconFiles(files) {
+  const jobs=[...files].map(f=>new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>{ // normalize to a PNG of at most 256px
+      const im=new Image();
+      im.onload=()=>{
+        const k=Math.min(1,256/Math.max(im.naturalWidth||256,im.naturalHeight||256));
+        const c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round((im.naturalWidth||256)*k)); c.height=Math.max(1,Math.round((im.naturalHeight||256)*k));
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        res(c.toDataURL('image/png'));
+      };
+      im.onerror=()=>res(null);
+      im.src=r.result;
+    };
+    r.readAsDataURL(f);
+  }));
+  Promise.all(jobs).then(urls=>{
+    customIcons.push(...urls.filter(Boolean)); saveCustomIcons(); buildIconPop(); toggleIconPop(true);
+  });
+}
+function toggleIconPop(force) {
+  const pop=document.getElementById('icon-pop');
+  const open=force!==undefined?force:!pop.classList.contains('open');
+  pop.classList.toggle('open',open);
+  document.getElementById('btn-icons').classList.toggle('active',open);
+}
+function insertIcon(ref) {
+  const c=s2w(canvas.width/2,canvas.height/2), sz=80/vp.s;
+  const el=mkEl('icon',c.x-sz/2,c.y-sz/2,c.x+sz/2,c.y+sz/2);
+  Object.assign(el,ref);
+  if(el.style.strokeWidth<1) el.style.strokeWidth=2;
+  saveHist(); elements.push(el);
+  toggleIconPop(false); setTool('select');
+  selIds=[el.id]; updateSidebar(); render();
+}
+document.addEventListener('mousedown',e=>{
+  if(!e.target.closest('#icon-pop,#btn-icons')) toggleIconPop(false);
+});
+buildIconPop();
+
+// ═══════════════════════════════════════════════
 //  SIDEBAR
 // ═══════════════════════════════════════════════
 function updateSidebar() {
@@ -1763,7 +1885,9 @@ function updateSidebar() {
   document.getElementById('sec-text').style.display=isText?'':'none';
   document.getElementById('sec-arrow').style.display=isArr?'':'none';
   document.getElementById('sec-fill').style.display=isText?'none':'';
-  document.getElementById('sec-rough').style.display=isFH?'none':'';
+  const isIcon=sels.every(e=>e.type==='icon');
+  document.getElementById('sec-rough').style.display=(isFH||isIcon)?'none':'';
+  document.getElementById('fill-style-btns').style.display=isIcon?'none':'';
 
   document.getElementById('sw-stroke').style.background=el.style.strokeColor;
   document.getElementById('inp-stroke').value=el.style.strokeColor==='transparent'?'#000000':el.style.strokeColor;
