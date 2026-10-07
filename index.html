@@ -74,6 +74,33 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
 .icon-pop img{width:100%;height:100%;display:block;object-fit:contain}
 .icon-pop .icon-add{border:1px dashed #c9c6ff;color:var(--purple)}
 
+/* ── SMART DETAILS ── */
+.meta-in{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:5px 7px;
+  font:12px 'Assistant',sans-serif;color:#333;background:#fff;outline:none}
+.meta-in:focus{border-color:var(--purple)}
+textarea.meta-in{resize:vertical;min-height:52px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--border);background:#fff;border-radius:12px;padding:2px 9px;font:11px 'Assistant',sans-serif;
+  cursor:pointer;display:flex;align-items:center;gap:5px;color:#444}
+.chip i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.chip.active{border-color:var(--purple);background:#f3f2ff;color:#222;font-weight:700}
+.meta-tip{position:fixed;z-index:400;max-width:260px;background:#2b2b33;color:#fff;border-radius:8px;padding:8px 10px;
+  font:12px/1.45 'Assistant',sans-serif;pointer-events:none;display:none;white-space:pre-wrap;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+
+.fm-back{position:fixed;inset:0;background:rgba(20,20,30,.28);z-index:500;display:none;align-items:center;justify-content:center}
+.fm-back.open{display:flex}
+.fm{background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.2);width:440px;max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 60px);overflow-y:auto;padding:14px 16px;direction:rtl;font-family:'Assistant',sans-serif}
+.fm-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px;margin-bottom:10px}
+.fm-field{border:1px solid #eee;border-radius:9px;padding:8px;margin-bottom:8px;background:#fcfcfd}
+.fm-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.fm-row .meta-in{flex:1}
+.fm-opts{padding-right:26px;margin-top:4px}
+.fm-type{font-size:10px;color:#6c63ff;background:#f3f2ff;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.fm-ib{border:none;background:none;cursor:pointer;color:#888;font-size:11px;padding:3px 4px;border-radius:4px}
+.fm-ib:hover{background:#f1f1f5;color:#333}
+.fm-color{width:24px;height:24px;border:none;padding:0;background:none;cursor:pointer}
+
 /* ── CANVAS CONTAINER ── */
 .canvas-wrap{flex:1;position:relative;overflow:hidden}
 #c{position:absolute;top:0;left:0}
@@ -173,6 +200,7 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
   <button class="menu-btn" onclick="redo()">↪ חזור</button>
   <div class="menu-sep"></div>
   <button class="menu-btn" onclick="fitAll()">⊡ התאם</button>
+  <button class="menu-btn" onclick="openFields()">🏷 שדות</button>
   <div class="menu-sep"></div>
   <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;font-weight:600;white-space:nowrap" title="יישור אובייקטים ומרווחים שווים אוטומטית בעת גרירה">
     <input type="checkbox" id="chk-smartguides" checked onchange="toggleSmartGuides(this.checked)" style="cursor:pointer">
@@ -273,6 +301,15 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
   <div class="canvas-wrap" id="wrap">
     <canvas id="c"></canvas>
     <div class="icon-pop" id="icon-pop"></div>
+    <div class="meta-tip" id="meta-tip"></div>
+    <div class="fm-back" id="fields-modal" onmousedown="if(event.target===this)closeFields()">
+      <div class="fm">
+        <div class="fm-head">שדות הפרויקט <button class="fm-ib" onclick="closeFields()">✕</button></div>
+        <div id="fields-list"></div>
+        <div class="sb-lbl" style="margin-top:12px">הוסף שדה</div>
+        <div class="chips" id="fields-add"></div>
+      </div>
+    </div>
     <input type="file" id="icon-file" accept="image/png,image/svg+xml,image/jpeg,image/webp" multiple style="display:none" onchange="loadIconFiles(this.files);this.value=''">
     <div class="hint">V=בחירה · H=הזזה · R=מלבן · E=עיגול · A=חץ · C=חץ מעוקל · T=טקסט · P=עיפרון · Del=מחק · Ctrl+Z=בטל</div>
   </div>
@@ -423,6 +460,19 @@ body{font-family:'Nunito','Assistant',sans-serif;background:var(--bg);overflow:h
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="6" y1="18" x2="20" y2="18"/></svg>
         </button>
       </div>
+    </div>
+
+    <!-- Smart details -->
+    <div class="sb-sec" id="sec-meta">
+      <div class="sb-lbl" style="display:flex;justify-content:space-between;align-items:center">פרטים <button class="chip" style="padding:1px 7px" onclick="openFields()">⚙ שדות</button></div>
+      <div id="meta-fields"></div>
+      <div class="sb-lbl" style="margin-top:9px">סידור תגיות</div>
+      <div class="chips">
+        <button class="chip" id="tagdir-h" onclick="setTagDir('h')">↔ לרוחב</button>
+        <button class="chip" id="tagdir-v" onclick="setTagDir('v')">↕ לאורך</button>
+        <button class="chip" onclick="resetTagPos()" title="החזר את התגיות מתחת לאלמנט">↺ מיקום ברירת מחדל</button>
+      </div>
+      <div style="font-size:10px;color:#999;margin-top:5px">גרור את התגיות כדי למקם אותן — הן זזות יחד עם האלמנט</div>
     </div>
 
     <!-- Actions -->
@@ -909,6 +959,7 @@ function render() {
   // the element being text-edited is shown by the textarea overlay instead
   for(const el of elements) if(el.id!==editId) drawEl(el, ctx, rc);
   if(curEl) drawEl(curEl, ctx, rc);
+  for(const el of elements) if(el.meta && el.id!==editId) drawMetaTags(el);
 
   for(const id of selIds) {
     const el=elements.find(e=>e.id===id);
@@ -1206,6 +1257,13 @@ function onDown(e) {
   }
 
   if(tool==='select') {
+    const tagEl=tagAt(wp.x,wp.y);
+    if(tagEl) {
+      const b=bbox(tagEl), r=metaTagBox(tagEl);
+      tagDrag={el:tagEl, wp:{...wp}, off:{x:r.x-b.x, y:r.y-b.y}};
+      selIds=[tagEl.id]; updateSidebar(); canvas.style.cursor='grabbing'; render();
+      return;
+    }
     if(selIds.length===1) {
       const sel=elements.find(e=>e.id===selIds[0]);
       if(sel) {
@@ -1264,6 +1322,10 @@ function onDown(e) {
 
 function onMove(e) {
   const sp=epos(e), wp=s2w(sp.sx,sp.sy);
+  if(tagDrag) {
+    tagDrag.el.meta.tagOff={x:tagDrag.off.x+wp.x-tagDrag.wp.x, y:tagDrag.off.y+wp.y-tagDrag.wp.y};
+    render(); return;
+  }
 
   if(panning) {
     vp.x=panStart.vx+sp.sx-panStart.sx;
@@ -1383,6 +1445,7 @@ function onMove(e) {
 function onUp(e) {
   clearSnap();
   guideLines=[];
+  if(tagDrag) { tagDrag=null; saveHist(); canvas.style.cursor='grab'; render(); return; }
   if(panning) { panning=false; canvas.style.cursor=tool==='pan'?'grab':''; return; }
   if(resizing) { resizing=false;resHandle=null;saveHist();render();return; }
   if(dragging) { dragging=false;saveHist();return; }
@@ -1441,10 +1504,13 @@ function updateCursor(wp) {
       }
     }
   }
+  const tagEl=tagAt(wp.x,wp.y);
+  if(tagEl) { canvas.style.cursor='grab'; showMetaTip(tagEl); return; }
   for(let i=elements.length-1;i>=0;i--) {
-    if(hit(elements[i],wp.x,wp.y)) { canvas.style.cursor='move'; return; }
+    if(hit(elements[i],wp.x,wp.y)) { canvas.style.cursor='move'; showMetaTip(elements[i]); return; }
   }
   canvas.style.cursor='default';
+  showMetaTip(null);
 }
 
 // ═══════════════════════════════════════════════
@@ -1696,10 +1762,11 @@ function sendBack() {
 function newFile() {
   if(elements.length&&!confirm('לפתוח קובץ חדש? השינויים הנוכחיים יאבדו.')) return;
   elements=[];selIds=[];history=[[]];histIdx=0;nid=1;vp={x:0,y:0,s:1};
+  fields=defaultFields(); metaSig='';
   updateSidebar(); updZoom(); render();
 }
 function saveFile() {
-  const data=JSON.stringify({version:2,elements,viewport:vp},null,2);
+  const data=JSON.stringify({version:2,elements,viewport:vp,fields},null,2);
   const a=Object.assign(document.createElement('a'),{
     href:URL.createObjectURL(new Blob([data],{type:'application/json'})),
     download:'drawing.sketchdraw'
@@ -1715,6 +1782,7 @@ function loadFromFile(inp) {
       const d=JSON.parse(e.target.result);
       elements=d.elements||[];
       if(d.viewport) vp=d.viewport;
+      fields=d.fields||defaultFields(); metaSig='';
       selIds=[]; history=[JSON.parse(JSON.stringify(elements))]; histIdx=0;
       if(elements.length) nid=Math.max(...elements.map(el=>el.id||0))+1;
       updateSidebar(); updZoom(); render();
@@ -1865,6 +1933,247 @@ document.addEventListener('mousedown',e=>{
 buildIconPop();
 
 // ═══════════════════════════════════════════════
+//  SMART DETAILS — project fields (saved with the drawing) and per-element values
+// ═══════════════════════════════════════════════
+// field: {id, type, name, options?:[{id,label,color}]}
+// el.meta holds values keyed by field id, plus tagDir / tagOff for the tag layout
+const FIELD_TYPES={
+  select:  'בחירה יחידה',
+  date:    'תאריך',
+  person:  'אחראי',
+  number:  'מספר',
+  progress:'בר אחוזים',
+  text:    'טקסט',
+};
+function defaultFields() {
+  return [
+    {id:'desc',type:'text',name:'תיאור'},
+    {id:'priority',type:'select',name:'עדיפות',options:[
+      {id:'high',label:'גבוהה',color:'#e03131'},
+      {id:'med', label:'בינונית',color:'#f59f00'},
+      {id:'low', label:'נמוכה',color:'#2f9e44'}]},
+    {id:'status',type:'select',name:'סטטוס',options:[
+      {id:'todo',   label:'לביצוע',color:'#868e96'},
+      {id:'doing',  label:'בעבודה',color:'#1c7ed6'},
+      {id:'waiting',label:'ממתין',color:'#f59f00'},
+      {id:'blocked',label:'תקוע',color:'#e03131'},
+      {id:'done',   label:'הושלם',color:'#2f9e44'}]},
+    {id:'owner',type:'person',name:'אחראי'},
+    {id:'due',type:'date',name:'תאריך יעד'},
+  ];
+}
+let fields=defaultFields();
+const uid=p=>p+Math.random().toString(36).slice(2,8);
+const escH=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function hasVal(v) { return v!==undefined && v!==null && v!==''; }
+function metaHas(m) { return !!m && fields.some(f=>hasVal(m[f.id])); }
+
+function setMeta(key,val) {
+  if(!selIds.length) return;
+  saveHist();
+  for(const id of selIds) {
+    const el=elements.find(e=>e.id===id); if(!el) continue;
+    el.meta={...(el.meta||{})};
+    if(hasVal(val)) el.meta[key]=val; else delete el.meta[key];
+    if(!metaHas(el.meta)) delete el.meta;
+  }
+  metaSig=''; updateSidebar(); render();
+}
+function toggleMetaChip(key,val) {
+  const el=elements.find(e=>e.id===selIds[0]);
+  setMeta(key, el&&el.meta&&el.meta[key]===val ? '' : val);
+}
+// live slider drag: show the value without a history entry per pixel
+function previewMeta(key,val) {
+  for(const id of selIds) { const el=elements.find(e=>e.id===id); if(el) { el.meta={...(el.meta||{})}; el.meta[key]=val; } }
+  render();
+}
+
+// sidebar "פרטים" is built from the field list
+let metaSig='';
+function updateMetaSection(sels) {
+  const box=document.getElementById('meta-fields');
+  const m=(sels[0]&&sels[0].meta)||{};
+  const sig=JSON.stringify([sels.map(e=>e.id),fields,m]);
+  if(sig===metaSig || box.contains(document.activeElement)) return;
+  metaSig=sig;
+  const people=[...new Set(elements.flatMap(e=>e.meta?fields.filter(f=>f.type==='person').map(f=>e.meta[f.id]):[]).filter(Boolean))];
+  box.innerHTML=fields.map(f=>{
+    const v=m[f.id], k=`'${f.id}'`;
+    let input='';
+    if(f.type==='select') input=`<div class="chips">${(f.options||[]).map(o=>
+      `<button class="chip${v===o.id?' active':''}" onclick="toggleMetaChip(${k},'${o.id}')"><i style="background:${o.color}"></i>${escH(o.label)}</button>`).join('')}</div>`;
+    else if(f.type==='text') input=`<textarea class="meta-in" placeholder="${escH(f.name)}…" onchange="setMeta(${k},this.value.trim())">${escH(v||'')}</textarea>`;
+    else if(f.type==='date') input=`<input class="meta-in" type="date" value="${escH(v||'')}" onchange="setMeta(${k},this.value)">`;
+    else if(f.type==='person') input=`<input class="meta-in" list="people-list" placeholder="שם…" value="${escH(v||'')}" onchange="setMeta(${k},this.value.trim())">`;
+    else if(f.type==='number') input=`<input class="meta-in" type="number" value="${hasVal(v)?v:''}" onchange="setMeta(${k},this.value===''?'':+this.value)">`;
+    else if(f.type==='progress') input=`<div class="sb-row"><input type="range" class="sl" min="0" max="100" step="5" value="${v||0}"
+        oninput="this.nextElementSibling.textContent=this.value+'%';previewMeta(${k},+this.value)" onchange="setMeta(${k},+this.value)">
+        <span class="sl-val">${v||0}%</span></div>`;
+    return `<div class="sb-lbl" style="margin-top:9px">${escH(f.name)}</div>${input}`;
+  }).join('')+`<datalist id="people-list">${people.map(n=>`<option value="${escH(n)}">`).join('')}</datalist>`;
+  document.getElementById('tagdir-h').classList.toggle('active',m.tagDir!=='v');
+  document.getElementById('tagdir-v').classList.toggle('active',m.tagDir==='v');
+}
+
+function initials(name) {
+  const p=name.trim().split(/\s+/);
+  return (p.length>1 ? p[0][0]+p[1][0] : name.trim().slice(0,2)).toUpperCase();
+}
+function fmtDue(d) { const [y,mo,da]=d.split('-'); return `${+da}/${+mo}`; }
+function isDone(m) { return fields.some(f=>f.type==='select' && m[f.id]==='done'); }
+
+// Tags sit at an offset from the element's top-left (meta.tagOff), so they travel with it.
+// meta.tagDir: 'h' (row, default) or 'v' (column). draw=false only measures.
+function drawMetaTags(el, draw=true) {
+  const m=el.meta; if(!metaHas(m)) return null;
+  const b=bbox(el);
+  const H=18, gap=4, fs=11, font=`600 ${fs}px 'Assistant',sans-serif`;
+  const off=m.tagOff||{x:0,y:b.h+6}, vert=m.tagDir==='v';
+  const x0=b.x+off.x, y0=b.y+off.y;
+  let x=x0, y=y0, maxX=x0, maxY=y0;
+  const advance=w=>{ maxX=Math.max(maxX,x+w); maxY=Math.max(maxY,y+H); if(vert) y+=H+gap; else x+=w+gap; };
+  ctx.save();
+  ctx.globalAlpha=el.style.opacity;
+  ctx.font=font; ctx.textBaseline='middle'; ctx.textAlign='left'; ctx.direction='rtl';
+  const pill=(text,fg,bg)=>{
+    const w=ctx.measureText(text).width+14;
+    if(draw) {
+      ctx.fillStyle=bg; ctx.beginPath(); ctx.roundRect(x,y,w,H,H/2); ctx.fill();
+      ctx.fillStyle=fg; ctx.textAlign='center'; ctx.fillText(text,x+w/2,y+H/2+0.5); ctx.textAlign='left';
+    }
+    advance(w);
+  };
+  let hasText=false;
+  for(const f of fields) {
+    const v=m[f.id]; if(!hasVal(v)) continue;
+    if(f.type==='select') {
+      const o=(f.options||[]).find(o=>o.id===v); if(o) pill(o.label,'#fff',o.color);
+    } else if(f.type==='person') {
+      if(draw) {
+        ctx.fillStyle='#6c63ff'; ctx.beginPath(); ctx.arc(x+H/2,y+H/2,H/2,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font=`700 ${fs-2}px 'Assistant',sans-serif`;
+        ctx.fillText(initials(v),x+H/2,y+H/2+0.5);
+        ctx.textAlign='left'; ctx.font=font;
+      }
+      advance(H);
+    } else if(f.type==='date') {
+      const late=!isDone(m) && v<new Date().toISOString().slice(0,10);
+      pill(fmtDue(v), late?'#c92a2a':'#555', late?'#ffe3e3':'#f1f3f5');
+    } else if(f.type==='number') {
+      pill(`${f.name} ${v}`,'#555','#f1f3f5');
+    } else if(f.type==='progress') {
+      const w=64, p=Math.max(0,Math.min(100,+v));
+      if(draw) {
+        ctx.fillStyle='#f1f3f5'; ctx.beginPath(); ctx.roundRect(x,y,w,H,H/2); ctx.fill();
+        ctx.fillStyle=p>=100?'#2f9e44':'#6c63ff'; ctx.beginPath(); ctx.roundRect(x,y,Math.max(H,w*p/100),H,H/2); ctx.fill();
+        ctx.fillStyle=p>=45?'#fff':'#333'; ctx.textAlign='center'; ctx.fillText(p+'%',x+w/2,y+H/2+0.5); ctx.textAlign='left';
+      }
+      advance(w);
+    } else if(f.type==='text') hasText=true;
+  }
+  if(hasText) pill('≡','#555','#f1f3f5');
+  ctx.restore();
+  return maxX>x0 ? {x:x0,y:y0,w:maxX-x0,h:maxY-y0} : null;
+}
+function metaTagBox(el) { return el.meta ? drawMetaTags(el,false) : null; }
+function tagAt(wx,wy) {
+  for(let i=elements.length-1;i>=0;i--) {
+    const r=metaTagBox(elements[i]);
+    if(r && wx>=r.x-3 && wx<=r.x+r.w+3 && wy>=r.y-3 && wy<=r.y+r.h+3) return elements[i];
+  }
+  return null;
+}
+let tagDrag=null;
+function setTagDir(d) {
+  if(!selIds.length) return;
+  saveHist();
+  for(const id of selIds) { const el=elements.find(e=>e.id===id); if(el&&el.meta) el.meta.tagDir=d; }
+  metaSig=''; updateSidebar(); render();
+}
+function resetTagPos() {
+  saveHist();
+  for(const id of selIds) { const el=elements.find(e=>e.id===id); if(el&&el.meta) delete el.meta.tagOff; }
+  render();
+}
+
+let tipId=null;
+function showMetaTip(el) {
+  const tip=document.getElementById('meta-tip');
+  if(!el||!metaHas(el.meta)||editId) { tip.style.display='none'; tipId=null; return; }
+  if(tipId===el.id) return;
+  tipId=el.id;
+  const m=el.meta, rows=[], facts=[];
+  for(const f of fields) {
+    const v=m[f.id]; if(!hasVal(v)) continue;
+    if(f.type==='text') { rows.push(escH(v)); continue; }
+    let shown=v;
+    if(f.type==='select') { const o=(f.options||[]).find(o=>o.id===v); if(!o) continue; shown=o.label; }
+    else if(f.type==='date') shown=fmtDue(v);
+    else if(f.type==='progress') shown=v+'%';
+    facts.push(`${escH(f.name)}: ${escH(shown)}`);
+  }
+  if(facts.length) rows.push(`<span style="opacity:.75">${facts.join(' · ')}</span>`);
+  tip.innerHTML=rows.join('<br>');
+  const b=bbox(el), p=w2s(b.x+b.w/2,b.y), cr=canvas.getBoundingClientRect();
+  tip.style.display='block';
+  tip.style.left=Math.max(8,cr.left+p.x-tip.offsetWidth/2)+'px';
+  tip.style.top=Math.max(8,cr.top+p.y-tip.offsetHeight-10)+'px';
+}
+
+// ── field manager ──
+function openFields() { document.getElementById('fields-modal').classList.add('open'); renderFieldsModal(); }
+function closeFields() { document.getElementById('fields-modal').classList.remove('open'); }
+function fieldsChanged(rebuild=true) {
+  metaSig=''; tipId=null; updateSidebar(); render();
+  if(rebuild) renderFieldsModal();
+}
+function moveItem(arr,i,d) { const j=i+d; if(j<0||j>=arr.length) return; [arr[i],arr[j]]=[arr[j],arr[i]]; }
+function fieldOp(op,fi,oi,val) {
+  const f=fields[fi];
+  if(op==='name') { f.name=val; return fieldsChanged(false); }
+  if(op==='up'||op==='down') moveItem(fields,fi,op==='up'?-1:1);
+  if(op==='del') fields.splice(fi,1);
+  if(op==='optLabel') { f.options[oi].label=val; return fieldsChanged(false); }
+  if(op==='optColor') { f.options[oi].color=val; return fieldsChanged(false); }
+  if(op==='optUp'||op==='optDown') moveItem(f.options,oi,op==='optUp'?-1:1);
+  if(op==='optDel') f.options.splice(oi,1);
+  if(op==='optAdd') f.options.push({id:uid('o'),label:'אפשרות חדשה',color:'#868e96'});
+  fieldsChanged();
+}
+function addField(type) {
+  const f={id:uid('f'),type,name:FIELD_TYPES[type]};
+  if(type==='select') f.options=[{id:uid('o'),label:'אפשרות 1',color:'#1c7ed6'},{id:uid('o'),label:'אפשרות 2',color:'#2f9e44'}];
+  fields.push(f); fieldsChanged();
+}
+function renderFieldsModal() {
+  const ib=(label,title,call)=>`<button class="fm-ib" title="${title}" onclick="${call}">${label}</button>`;
+  document.getElementById('fields-list').innerHTML=fields.map((f,fi)=>`
+    <div class="fm-field">
+      <div class="fm-row">
+        ${ib('▲','הזז למעלה',`fieldOp('up',${fi})`)}${ib('▼','הזז למטה',`fieldOp('down',${fi})`)}
+        <input class="meta-in" value="${escH(f.name)}" oninput="fieldOp('name',${fi},0,this.value)">
+        <span class="fm-type">${FIELD_TYPES[f.type]}</span>
+        ${ib('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>','מחק שדה',`fieldOp('del',${fi})`)}
+      </div>
+      ${f.type==='select'?`<div class="fm-opts">
+        ${f.options.map((o,oi)=>`<div class="fm-row">
+          <input type="color" class="fm-color" value="${o.color}" oninput="fieldOp('optColor',${fi},${oi},this.value)">
+          <input class="meta-in" value="${escH(o.label)}" oninput="fieldOp('optLabel',${fi},${oi},this.value)">
+          ${ib('▲','למעלה',`fieldOp('optUp',${fi},${oi})`)}${ib('▼','למטה',`fieldOp('optDown',${fi},${oi})`)}${ib('✕','מחק אפשרות',`fieldOp('optDel',${fi},${oi})`)}
+        </div>`).join('')}
+        <button class="chip" onclick="fieldOp('optAdd',${fi})">+ אפשרות</button>
+      </div>`:''}
+    </div>`).join('');
+}
+function buildFieldTypeButtons() {
+  document.getElementById('fields-add').innerHTML=Object.entries(FIELD_TYPES).map(([t,l])=>
+    `<button class="chip" onclick="addField('${t}')">+ ${l}</button>`).join('');
+}
+buildFieldTypeButtons();
+
+// ═══════════════════════════════════════════════
 //  SIDEBAR
 // ═══════════════════════════════════════════════
 function updateSidebar() {
@@ -1898,6 +2207,8 @@ function updateSidebar() {
     el.style.fillColor==='transparent'
       ?'repeating-linear-gradient(45deg,#ddd,#ddd 3px,#fff 3px,#fff 6px)'
       :el.style.fillColor;
+
+  updateMetaSection(sels);
 
   if(isText) {
     document.getElementById('sel-font').value=el.style.fontFamily||'Caveat';
